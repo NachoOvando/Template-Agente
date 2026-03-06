@@ -1,0 +1,261 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 99%;
+    --foreground: 220 20% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 12%;
+
+    /* Lifestyle gradient theme - Blue to Pink to Orange */
+    --primary: 217 100% 65%; /* #4E93FF */
+    --primary-foreground: 0 0% 100%;
+    
+    --primary-light: 215 86% 70%; /* #639CF2 */
+    --primary-glow: 195 100% 94%; /* #E4F9FF */
+
+    --secondary: 320 98% 74%; /* #FF7EEA */
+    --secondary-foreground: 0 0% 100%;
+
+    --accent: 27 100% 55%; /* #F38300 */
+    --accent-foreground: 0 0% 100%;
+    
+    --accent-red: 356 100% 56%; /* #F3DDID approximation */
+    
+    --muted: 220 15% 96%;
+    --muted-foreground: 0 0% 60%; /* #999 */
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 15% 88%;
+    --input: 220 15% 88%;
+    --ring: 217 100% 65%;
+
+    --radius: 1.2rem;
+
+    /* Lifestyle editorial tokens */
+    --editorial-text: 220 20% 15%;
+    --editorial-text-light: 220 15% 45%;
+    --editorial-tag: 217 100% 65%;
+    --editorial-tag-bg: 217 100% 95%;
+    --editorial-hover: 217 100% 98%;
+    
+    /* Gradient definitions */
+    --gradient-primary: linear-gradient(135deg, hsl(217 100% 65%), hsl(320 98% 74%));
+    --gradient-hero: linear-gradient(135deg, hsl(217 100% 65%) 0%, hsl(215 86% 70%) 30%, hsl(320 98% 74%) 60%, hsl(27 100% 55%) 100%);
+    --gradient-accent: linear-gradient(90deg, hsl(320 98% 74%), hsl(356 100% 56%), hsl(27 100% 55%));
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217 100% 65%;
+  }
+
+  .dark {
+    --background: 220 20% 8%;
+    --foreground: 220 15% 95%;
+
+    --card: 220 20% 10%;
+    --card-foreground: 220 15% 95%;
+
+    --popover: 220 20% 10%;
+    --popover-foreground: 220 15% 95%;
+
+    --primary: 217 100% 70%;
+    --primary-foreground: 0 0% 100%;
+    
+    --primary-light: 215 86% 75%;
+    --primary-glow: 195 100% 30%;
+
+    --secondary: 320 98% 80%;
+    --secondary-foreground: 220 20% 10%;
+
+    --accent: 27 100% 60%;
+    --accent-foreground: 0 0% 100%;
+    
+    --accent-red: 356 100% 60%;
+    
+    --muted: 220 20% 15%;
+    --muted-foreground: 0 0% 60%; /* #999 */
+
+    --destructive: 0 62.8% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 20% 20%;
+    --input: 220 20% 20%;
+    --ring: 217 100% 70%;
+
+    --editorial-text: 220 15% 92%;
+    --editorial-text-light: 220 15% 65%;
+    --editorial-tag: 217 100% 70%;
+    --editorial-tag-bg: 217 40% 20%;
+    --editorial-hover: 220 20% 12%;
+    
+    --gradient-primary: linear-gradient(135deg, hsl(217 100% 70%), hsl(320 98% 80%));
+    --gradient-hero: linear-gradient(135deg, hsl(217 100% 70%) 0%, hsl(215 86% 75%) 30%, hsl(320 98% 80%) 60%, hsl(27 100% 60%) 100%);
+    --gradient-accent: linear-gradient(90deg, hsl(320 98% 80%), hsl(356 100% 60%), hsl(27 100% 60%));
+    
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 217 100% 70%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217 100% 70%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-size: 1.6rem;
+    -webkit-font-smoothing: antialiased;
+    -moz-font-smoothing: antialiased;
+    -o-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 2;
+  }
+  html {
+    font-size: 62.5%;
+  }
+
+  @media (min-width: 40em) {
+    body {
+      font-size: 1.8rem;
+    }
+  }
+}
+
+/* Add the keyframes definition */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@layer components {
+  .blog-feed__item {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  .blog-feed__item.animate-fadeInUp {
+    animation: fadeInUp 0.3s ease-out forwards;
+  }
+
+  /* Stagger delays for grid layouts */
+  @media (min-width: 32em) {
+    .blog-feed__item:nth-child(2).animate-fadeInUp {
+      animation-delay: 150ms;
+    }
+  }
+
+  @media (min-width: 60em) {
+    .blog-feed__item:nth-child(2).animate-fadeInUp {
+      animation-delay: 150ms;
+    }
+    .blog-feed__item:nth-child(3).animate-fadeInUp {
+      animation-delay: 300ms;
+    }
+  }
+
+  /* About Page Animations */
+  @keyframes gradientShift {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.05);
+      opacity: 0.9;
+    }
+  }
+
+  @keyframes drawLine {
+    from {
+      height: 0;
+    }
+    to {
+      height: 100%;
+    }
+  }
+
+  @keyframes slideInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .gradient-background {
+    background: linear-gradient(-45deg, hsl(217 100% 95%), hsl(320 98% 95%), hsl(27 100% 95%), hsl(217 100% 95%));
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+  }
+
+  .float-animation {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .pulse-animation {
+    animation: pulse 2s ease-in-out infinite;
+  }
+}
