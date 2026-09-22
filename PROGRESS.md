@@ -1,9 +1,10 @@
 # Progreso — Cata (agente de ejemplo)
 
 ## Estado actual
-Fase 1 (MVP) + Fase 2 (página de prueba, migrada a React + beUI) implementadas,
-auditadas y validadas end-to-end con Gemini real. Ponytail y los 3 subagentes
-ya cargan nativos. Próximo paso: arrancar Fase 3 del roadmap cuando se defina.
+Fase 1 (MVP) + Fase 2 (página de prueba React + beUI) + widget embebible
+implementadas, auditadas y validadas end-to-end con Gemini real. Ponytail y
+los 3 subagentes ya cargan nativos. Próximo paso: arrancar el resto de la
+Fase 3 del roadmap cuando se defina (n8n, Jev, Observatorio).
 
 ## Historial
 
@@ -60,10 +61,32 @@ ya cargan nativos. Próximo paso: arrancar Fase 3 del roadmap cuando se defina.
     `react-markdown` (ver BITACORA.md). Probado end-to-end con Playwright
     headless (typecheck limpio, build de producción limpio, sin errores de
     consola, conversación completa funcionando con Gemini real).
+  - Widget embebible adelantado a pedido explícito del usuario (estaba
+    fuera de alcance del kickoff original). `Chat.tsx` extraído de `App.tsx`
+    para reusar la lógica de conversación entre la página de prueba y
+    `ChatWidget.tsx` (burbuja flotante + panel). `widget-entry.tsx` +
+    `vite.widget.config.ts` compilan un IIFE autocontenido
+    (`dist-widget/widget.js`, `npm run build:widget`) que se monta en un
+    Shadow DOM — aislamiento total de CSS respecto al sitio host. Backend:
+    CORS restringido por `CORS_ALLOWED_ORIGINS` (ya no `"*"`) y rate
+    limiting in-memory por IP en `POST /messages` (`rate_limit.py`, 20
+    msj/min) porque ahora es un endpoint público sin API key.
+    Encontrados y corregidos 2 bugs reales de este mecanismo (ver
+    BITACORA.md): `process is not defined` en el bundle IIFE (falta
+    `define` de `process.env.NODE_ENV`, además bajó el bundle de 1.1MB a
+    ~700KB), y el panel se renderizaba transparente (`:root` no matchea
+    dentro de un shadow tree, hay que reescribirlo a `:host`). Validado
+    con Playwright embebiendo el widget en una página HTML de terceros
+    simulada con CSS deliberadamente hostil (`* { border-radius: 0
+    !important }`, etc.) — ni el widget rompió el sitio host, ni el sitio
+    host rompió el widget.
 - Falta:
   - Nitpicks de backend-senior no resueltos a propósito (no ameritan acción en
     este MVP): `requirements.txt` sin pins exactos, sin exception handler
     global con logging del lado servidor, sin índice en `knowledge_chunks.source`.
-  - Definir alcance de la Fase 3 (fuera de este kickoff: ingesta vía n8n,
-    piloto de Jev, Observatorio, widget embebible).
+  - Rate limiting es in-memory por proceso (`# ponytail:` marcado en
+    `rate_limit.py`) — no sirve si se corre con más de un worker/instancia.
+    Pasar a un backend compartido (Redis) si se escala.
+  - Definir alcance del resto de la Fase 3 (fuera de este kickoff: ingesta
+    vía n8n, piloto de Jev, Observatorio).
 - Bloqueadores: ninguno.

@@ -25,3 +25,18 @@ Requiere el backend (`apps/api`) corriendo — ver el README/CLAUDE.md de la ra�
 ```bash
 npx shadcn@latest add @beui/<nombre-del-componente>
 ```
+
+## Widget embebible
+
+```bash
+npm run build:widget   # dist-widget/widget.js
+```
+
+Un sitio de terceros lo carga con:
+
+```html
+<script src="https://tu-dominio/widget.js" data-api-base="https://tu-api"></script>
+```
+
+Ver la sección "Widget embebible" en el `CLAUDE.md` de la raíz para el detalle
+de aislamiento (Shadow DOM) y configuración del backend (CORS, rate limiting).

@@ -13,8 +13,10 @@ validar el enfoque antes de escalarlo al proyecto real.
 - **Es**: template reusable, base para futuros agentes del mismo tipo.
 - **No es**: el sistema completo de Catamarca, ni un descartable de prueba de concepto
   que se tira después de este kickoff.
-- Fuera de alcance en esta fase: ingesta vía n8n, piloto de Jev, Observatorio, widget
-  embebible. Son pasos posteriores de la hoja de ruta ya definida.
+- Fuera de alcance en esta fase: ingesta vía n8n, piloto de Jev, Observatorio. Son
+  pasos posteriores de la hoja de ruta ya definida.
+- El widget embebible (`apps/web/dist-widget/widget.js`) se adelantó a pedido
+  explícito del usuario — ver sección "Widget embebible" más abajo.
 
 ## Stack y por qué
 
@@ -32,6 +34,32 @@ validar el enfoque antes de escalarlo al proyecto real.
   usuario para definir el UI/UX del chat. Sigue siendo un arnés de prueba
   end-to-end, no un producto: sin sidebar, sin navegación, sin persistencia
   de conversación más allá de la sesión del navegador. Ver `apps/web/README.md`.
+
+## Widget embebible
+
+`apps/web/src/widget-entry.tsx` + `vite.widget.config.ts` compilan un bundle
+IIFE autocontenido (`npm run build:widget` → `dist-widget/widget.js`) que
+cualquier sitio de terceros carga con:
+
+```html
+<script src="https://tu-dominio/widget.js" data-api-base="https://tu-api"></script>
+```
+
+- Se monta en un Shadow DOM (`host.attachShadow`) — el CSS del sitio host no
+  le pisa estilos al widget, y viceversa. El CSS inyectado reescribe
+  `:root` → `:host` (ver BITACORA.md, `:root` no matchea dentro de un shadow
+  tree).
+- `Chat.tsx` es el componente compartido entre la página de prueba
+  (`App.tsx`) y el widget (`ChatWidget.tsx`) — la lógica de conversación no
+  está duplicada.
+- La URL del backend se configura en runtime vía `data-api-base` (no en
+  build time como en la página de prueba), porque el mismo bundle se
+  distribuye a cualquier sitio host — ver `lib/api.ts::setApiBaseUrl`.
+- Backend: `CORS_ALLOWED_ORIGINS` tiene que incluir cada dominio que aloje
+  el widget (nunca `"*"` — ver `config.py`). `POST /messages` tiene rate
+  limiting in-memory por IP (`rate_limit.py`, 20 mensajes/minuto) porque es
+  un endpoint público sin autenticación que cuesta una llamada real a
+  Gemini por mensaje.
 
 ## Reglas no negociables
 
