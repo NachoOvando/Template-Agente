@@ -12,28 +12,29 @@ from graph.state import REQUIRED_SLOTS, AgentState, ExtractedSlots
 from llm.provider import LLMProvider
 
 _EXTRACT_SYSTEM_PROMPT = (
-    "Extraé del mensaje del usuario los datos de su viaje que estén explícitamente "
-    "mencionados: interés turístico, tipo de grupo con el que viaja, duración del "
-    "viaje y época del año. Si un dato no está mencionado, dejalo vacío (null) — "
-    "no lo inventes ni lo infieras de contexto que no está en el mensaje."
+    "Extraé del mensaje del usuario los datos que estén explícitamente "
+    "mencionados, según los campos definidos en el schema de extracción. "
+    "Si un dato no está mencionado, dejalo vacío (null) — no lo inventes "
+    "ni lo infieras de contexto que no está en el mensaje."
 )
 
-_GENERATE_SYSTEM_PROMPT = """Sos Cata, el asistente conversacional de turismo de Visit Catamarca.
+_GENERATE_SYSTEM_PROMPT = """Sos [TU PROYECTO], un asistente conversacional.
 Respondé siempre en español rioplatense/argentino (voseo: "vos podés", "tenés") —
 nunca como una traducción literal de un prompt en inglés, y sin regionalismos de
-otros países hispanohablantes (nada de "tinca", "chévere", "vale", etc.).
+otros países hispanohablantes (nada de "tinca", "chévere", "vale", etc.). Esta es
+la convención de tono de este template, no un requisito — reemplazable al forkear.
 
 Usá ÚNICAMENTE la información que aparece en la sección CONTEXTO. Regla estricta:
 si el CONTEXTO está vacío o no tiene nada relevante para la pregunta, respondé
 explícitamente que no tenés esa información todavía. Nunca completes la respuesta
-con conocimiento general sobre Catamarca o turismo que no venga del CONTEXTO —
-ni aunque lo sepas."""
+con conocimiento general sobre [TU DOMINIO] que no venga del CONTEXTO — ni aunque
+lo sepas."""
 
 _CLARIFYING_QUESTIONS = {
-    "interes": "¿Qué te gustaría hacer en tu viaje? Por ejemplo trekking, gastronomía, historia y cultura, o descanso.",
-    "tipo_grupo": "¿Con quién vas a viajar? ¿Solo/a, en pareja, en familia, con amigos?",
+    "slot_a": "Placeholder — reemplazar por la pregunta que corresponde a slot_a en tu dominio.",
+    "slot_b": "Placeholder — reemplazar por la pregunta que corresponde a slot_b en tu dominio.",
 }
-_DEFAULT_CLARIFYING_QUESTION = "¿Me contás un poco más sobre tu viaje para poder ayudarte mejor?"
+_DEFAULT_CLARIFYING_QUESTION = "¿Me contás un poco más para poder ayudarte mejor?"
 
 
 def make_extract_profile_node(llm_provider: LLMProvider):
@@ -43,9 +44,9 @@ def make_extract_profile_node(llm_provider: LLMProvider):
             user_prompt=state["user_message"],
             schema=ExtractedSlots,
         )
-        profile = state["visitor_profile"]
+        profile = state["user_profile"]
         # Primera mención gana: si el slot ya estaba lleno, no se pisa. Es lo que
-        # garantiza que una misma sesión no termine con dos VisitorProfile
+        # garantiza que una misma sesión no termine con dos UserProfile
         # divergentes (ver checklist del subagente `tester`).
         updates = {
             field: getattr(extracted, field)
@@ -57,7 +58,7 @@ def make_extract_profile_node(llm_provider: LLMProvider):
         missing_slot = next(
             (slot for slot in REQUIRED_SLOTS if getattr(merged_profile, slot) is None), None
         )
-        return {"visitor_profile": merged_profile, "missing_slot": missing_slot}
+        return {"user_profile": merged_profile, "missing_slot": missing_slot}
 
     return extract_profile_node
 
@@ -71,15 +72,15 @@ def ask_clarifying_node(state: AgentState) -> dict:
 
 
 def _build_retrieval_query(state: AgentState) -> str:
-    """El mensaje del turno actual puede no mencionar el interés (ej. el
-    usuario solo contesta "voy en pareja" a la pregunta del slot faltante) —
-    el interés real puede venir de un turno anterior. Sin esto, la búsqueda
-    embebe solo el último mensaje y pierde el tema real de la consulta."""
-    profile = state["visitor_profile"]
+    """El mensaje del turno actual puede no mencionar todos los datos del
+    perfil (ej. el usuario solo contesta el slot que faltaba) — el dato real
+    puede venir de un turno anterior. Sin esto, la búsqueda embebe solo el
+    último mensaje y pierde el tema real de la consulta."""
+    profile = state["user_profile"]
     known = [
-        value
-        for value in (profile.interes, profile.tipo_grupo, profile.duracion_viaje, profile.epoca_del_anio)
-        if value
+        getattr(profile, field)
+        for field in type(profile).model_fields
+        if getattr(profile, field) is not None
     ]
     return ". ".join([*known, state["user_message"]])
 

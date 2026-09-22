@@ -19,7 +19,7 @@ son la memoria compartida del equipo, no solo contexto de referencia.
 - **Caso "base vacía"**: la app no debe romper si pgvector no tiene chunks cargados
   todavía.
 - **Consistencia de datos**: una misma conversación no debe generar dos
-  `VisitorProfile` divergentes en la misma sesión.
+  `UserProfile` divergentes en la misma sesión.
 
 Si un bug encontrado no es obvio en su causa, documentalo en `BITACORA.md` al
 resolverlo (no solo el fix, la causa raíz).

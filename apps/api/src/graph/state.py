@@ -12,42 +12,42 @@ from pydantic import BaseModel, Field
 # retrieve_context_node. Código plano (regla no negociable #4) — sin esto en una
 # lista, tendríamos que preguntarle a un LLM si "falta algo", que es más caro,
 # más lento y menos predecible que comparar contra None.
-REQUIRED_SLOTS = ("interes", "tipo_grupo")
+REQUIRED_SLOTS = ("slot_a", "slot_b")
 
 
-class VisitorProfile(BaseModel):
-    """Slots del visitante para esta conversación. Una vez que un campo se llena,
+class UserProfile(BaseModel):
+    """Placeholders — redefinir para tu dominio. Una vez que un campo se llena,
     extract_profile_node no lo vuelve a pisar — ver BITACORA.md si hace falta
     cambiar ese comportamiento (permitir corrección)."""
 
-    interes: str | None = Field(
-        default=None, description="Interés turístico principal, ej. 'trekking', 'gastronomía', 'historia'"
+    slot_a: str | None = Field(
+        default=None, description="Placeholder — slot obligatorio A. Redefinir para tu dominio."
     )
-    tipo_grupo: str | None = Field(
-        default=None, description="Con quién viaja, ej. 'familia', 'pareja', 'solo', 'amigos'"
+    slot_b: str | None = Field(
+        default=None, description="Placeholder — slot obligatorio B. Redefinir para tu dominio."
     )
-    duracion_viaje: str | None = Field(
-        default=None, description="Duración del viaje, ej. 'fin de semana', '5 días'"
+    slot_c: str | None = Field(
+        default=None, description="Placeholder — slot opcional C. Redefinir para tu dominio."
     )
-    epoca_del_anio: str | None = Field(
-        default=None, description="Época del año en la que planea viajar, si la menciona"
+    slot_d: str | None = Field(
+        default=None, description="Placeholder — slot opcional D. Redefinir para tu dominio."
     )
 
 
 class ExtractedSlots(BaseModel):
     """Salida estructurada de un solo mensaje del usuario — todos los campos son
-    genuinamente opcionales, a diferencia de VisitorProfile que es el acumulado."""
+    genuinamente opcionales, a diferencia de UserProfile que es el acumulado."""
 
-    interes: str | None = None
-    tipo_grupo: str | None = None
-    duracion_viaje: str | None = None
-    epoca_del_anio: str | None = None
+    slot_a: str | None = None
+    slot_b: str | None = None
+    slot_c: str | None = None
+    slot_d: str | None = None
 
 
 class AgentState(TypedDict):
     session_id: str
     user_message: str
-    visitor_profile: VisitorProfile
+    user_profile: UserProfile
     missing_slot: str | None
     retrieved_chunks: list[str]
     response: str

@@ -7,7 +7,8 @@ from contextlib import contextmanager
 import pytest
 
 from graph.build_graph import build_graph
-from graph.state import AgentState, ExtractedSlots, VisitorProfile
+from graph.nodes import _CLARIFYING_QUESTIONS
+from graph.state import AgentState, ExtractedSlots, UserProfile
 from services.conversation_service import ConversationService
 from tests.fakes import FakeLLMProvider
 
@@ -21,7 +22,7 @@ def new_state(message: str) -> AgentState:
     return AgentState(
         session_id="test-session",
         user_message=message,
-        visitor_profile=VisitorProfile(),
+        user_profile=UserProfile(),
         missing_slot=None,
         retrieved_chunks=[],
         response="",
@@ -35,13 +36,13 @@ async def test_dato_faltante_pregunta_en_vez_de_asumir(monkeypatch):
     monkeypatch.setattr(
         "graph.nodes.search_similar_chunks", lambda *a, **k: pytest.fail("no debería llamarse")
     )
-    llm = FakeLLMProvider(extract_results=[ExtractedSlots(interes="trekking", tipo_grupo=None)])
+    llm = FakeLLMProvider(extract_results=[ExtractedSlots(slot_a="trekking", slot_b=None)])
     graph = build_graph(llm, fake_db_session_factory)
 
     result = await graph.ainvoke(new_state("quiero hacer trekking"))
 
-    assert result["missing_slot"] == "tipo_grupo"
-    assert "con quién" in result["response"].lower()
+    assert result["missing_slot"] == "slot_b"
+    assert result["response"] == _CLARIFYING_QUESTIONS["slot_b"]
     assert llm.generate_calls == []  # generate_response_node nunca se ejecutó
 
 
@@ -52,7 +53,7 @@ async def test_sin_contexto_no_alucina(monkeypatch):
     es lo único que garantiza el guardrail anti-alucinación (regla #2)."""
     monkeypatch.setattr("graph.nodes.search_similar_chunks", lambda db, embedding: [])
     llm = FakeLLMProvider(
-        extract_results=[ExtractedSlots(interes="trekking", tipo_grupo="familia")],
+        extract_results=[ExtractedSlots(slot_a="trekking", slot_b="familia")],
         generate_result="No tengo información sobre eso todavía.",
     )
     graph = build_graph(llm, fake_db_session_factory)
@@ -71,7 +72,7 @@ async def test_base_vacia_no_rompe(monkeypatch):
     """La app no debe romper si pgvector no tiene chunks cargados todavía."""
     monkeypatch.setattr("graph.nodes.search_similar_chunks", lambda db, embedding: [])
     llm = FakeLLMProvider(
-        extract_results=[ExtractedSlots(interes="trekking", tipo_grupo="familia")]
+        extract_results=[ExtractedSlots(slot_a="trekking", slot_b="familia")]
     )
     graph = build_graph(llm, fake_db_session_factory)
 
@@ -81,14 +82,14 @@ async def test_base_vacia_no_rompe(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_consistencia_visitor_profile_no_diverge(monkeypatch):
-    """Una misma sesión no debe terminar con dos VisitorProfile divergentes: si
+async def test_consistencia_user_profile_no_diverge(monkeypatch):
+    """Una misma sesión no debe terminar con dos UserProfile divergentes: si
     un slot ya se llenó, un mensaje posterior con un valor distinto no lo pisa."""
     monkeypatch.setattr("graph.nodes.search_similar_chunks", lambda db, embedding: [])
     llm = FakeLLMProvider(
         extract_results=[
-            ExtractedSlots(interes="trekking", tipo_grupo=None),
-            ExtractedSlots(interes="gastronomía", tipo_grupo="amigos"),
+            ExtractedSlots(slot_a="trekking", slot_b=None),
+            ExtractedSlots(slot_a="gastronomía", slot_b="amigos"),
         ]
     )
     service = ConversationService(llm, db_session_factory=fake_db_session_factory)
@@ -96,15 +97,15 @@ async def test_consistencia_visitor_profile_no_diverge(monkeypatch):
     await service.handle_message("session-1", "quiero hacer trekking")
     await service.handle_message("session-1", "en realidad prefiero gastronomía, voy con amigos")
 
-    final_profile = service._sessions["session-1"]["visitor_profile"]
-    assert final_profile.interes == "trekking"  # primera mención gana, no se pisa
-    assert final_profile.tipo_grupo == "amigos"  # este sí estaba vacío, se llena
+    final_profile = service._sessions["session-1"]["user_profile"]
+    assert final_profile.slot_a == "trekking"  # primera mención gana, no se pisa
+    assert final_profile.slot_b == "amigos"  # este sí estaba vacío, se llena
 
 
 @pytest.mark.asyncio
 async def test_mensajes_concurrentes_misma_sesion_no_se_pisan(monkeypatch):
     """Regresión: sin lock por sesión, dos mensajes casi simultáneos a la misma
-    sesión podían perder el turno anterior entero (no solo el visitor_profile) —
+    sesión podían perder el turno anterior entero (no solo el user_profile) —
     ver BITACORA.md. Se fuerza el entrelazado con un pequeño sleep dentro de
     extract_structured, para que el segundo `get` ocurra antes del primer `set`."""
     monkeypatch.setattr("graph.nodes.search_similar_chunks", lambda db, embedding: [])
@@ -116,8 +117,8 @@ async def test_mensajes_concurrentes_misma_sesion_no_se_pisan(monkeypatch):
 
     llm = SlowFakeLLMProvider(
         extract_results=[
-            ExtractedSlots(interes="trekking", tipo_grupo=None),
-            ExtractedSlots(interes=None, tipo_grupo="familia"),
+            ExtractedSlots(slot_a="trekking", slot_b=None),
+            ExtractedSlots(slot_a=None, slot_b="familia"),
         ]
     )
     service = ConversationService(llm, db_session_factory=fake_db_session_factory)
@@ -127,22 +128,22 @@ async def test_mensajes_concurrentes_misma_sesion_no_se_pisan(monkeypatch):
         service.handle_message("session-1", "voy con mi familia"),
     )
 
-    final_profile = service._sessions["session-1"]["visitor_profile"]
-    assert final_profile.interes == "trekking"  # no se pierde por la carrera
-    assert final_profile.tipo_grupo == "familia"
+    final_profile = service._sessions["session-1"]["user_profile"]
+    assert final_profile.slot_a == "trekking"  # no se pierde por la carrera
+    assert final_profile.slot_b == "familia"
 
 
 @pytest.mark.asyncio
-async def test_retrieval_usa_interes_de_turno_anterior(monkeypatch):
+async def test_retrieval_usa_slot_de_turno_anterior(monkeypatch):
     """Regresión: retrieve_context_node embebía solo el mensaje del turno
-    actual. Si el usuario dice el interés en el turno 1 ("termas") y en el
+    actual. Si el usuario dice el dato en el turno 1 ("termas") y en el
     turno 2 solo contesta el slot que faltaba ("voy en pareja"), la búsqueda
     tiene que seguir apuntando a "termas", no perder el tema — ver BITACORA.md."""
     monkeypatch.setattr("graph.nodes.search_similar_chunks", lambda db, embedding: [])
     llm = FakeLLMProvider(
         extract_results=[
-            ExtractedSlots(interes="termas", tipo_grupo=None),
-            ExtractedSlots(interes=None, tipo_grupo="pareja"),
+            ExtractedSlots(slot_a="termas", slot_b=None),
+            ExtractedSlots(slot_a=None, slot_b="pareja"),
         ]
     )
     service = ConversationService(llm, db_session_factory=fake_db_session_factory)
@@ -160,8 +161,8 @@ async def test_dos_sesiones_no_comparten_perfil(monkeypatch):
     monkeypatch.setattr("graph.nodes.search_similar_chunks", lambda db, embedding: [])
     llm = FakeLLMProvider(
         extract_results=[
-            ExtractedSlots(interes="trekking", tipo_grupo=None),
-            ExtractedSlots(interes="termas", tipo_grupo=None),
+            ExtractedSlots(slot_a="trekking", slot_b=None),
+            ExtractedSlots(slot_a="termas", slot_b=None),
         ]
     )
     service = ConversationService(llm, db_session_factory=fake_db_session_factory)
@@ -169,5 +170,5 @@ async def test_dos_sesiones_no_comparten_perfil(monkeypatch):
     await service.handle_message("session-a", "quiero hacer trekking")
     await service.handle_message("session-b", "quiero ir a las termas")
 
-    assert service._sessions["session-a"]["visitor_profile"].interes == "trekking"
-    assert service._sessions["session-b"]["visitor_profile"].interes == "termas"
+    assert service._sessions["session-a"]["user_profile"].slot_a == "trekking"
+    assert service._sessions["session-b"]["user_profile"].slot_a == "termas"

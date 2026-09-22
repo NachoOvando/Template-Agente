@@ -1,4 +1,4 @@
-"""Construcción del grafo explícito de Cata.
+"""Construcción del grafo explícito del agente.
 
     START → extract_profile → (condicional) → ask_clarifying → END
                                              → retrieve_context → generate_response → END

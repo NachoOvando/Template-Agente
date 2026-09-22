@@ -1,6 +1,6 @@
-# apps/web — Cata (arnés de prueba)
+# apps/web — Agent template (arnés de prueba)
 
-Frontend de prueba end-to-end para el backend de Cata. No es un producto —
+Frontend de prueba end-to-end para el backend del agente. No es un producto —
 sin sidebar, sin navegación, sin persistencia más allá de la sesión del
 navegador. Ver `CLAUDE.md` en la raíz del repo.
 

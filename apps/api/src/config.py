@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     google_api_key: str = ""
-    database_url: str = "postgresql+psycopg://cata:cata@localhost:5432/cata"
+    database_url: str = "postgresql+psycopg://app:app@localhost:5432/app"
     internal_api_key: str = ""
 
     gemini_model: str = "gemini-3.5-flash-lite"

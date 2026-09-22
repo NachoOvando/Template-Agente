@@ -5,13 +5,13 @@ import widgetCss from "@/index.css?inline";
 
 declare global {
   interface Window {
-    __cataWidgetMounted?: boolean;
+    __agentWidgetMounted?: boolean;
   }
 }
 
 function mount() {
-  if (window.__cataWidgetMounted) return;
-  window.__cataWidgetMounted = true;
+  if (window.__agentWidgetMounted) return;
+  window.__agentWidgetMounted = true;
 
   const scriptEl = document.currentScript as HTMLScriptElement | null;
   const apiBase = scriptEl?.dataset.apiBase;
@@ -22,7 +22,7 @@ function mount() {
   // clicks en el resto de la página (pointer-events se reactiva adentro,
   // solo en la burbuja y el panel — ver ChatWidget.tsx).
   const host = document.createElement("div");
-  host.id = "cata-chat-widget";
+  host.id = "agent-chat-widget";
   host.style.cssText = "position:fixed;inset:0;z-index:2147483000;pointer-events:none;";
   document.body.appendChild(host);
 

@@ -25,7 +25,7 @@ export function ChatWidget() {
           >
             <div className="flex shrink-0 items-center justify-between pb-2">
               <span className="text-sm font-medium text-muted-foreground">
-                Cata — Visit Catamarca
+                Agent template
               </span>
               <button
                 type="button"
@@ -45,7 +45,7 @@ export function ChatWidget() {
         type="button"
         size="icon"
         onClick={() => setOpen((current) => !current)}
-        aria-label={open ? "Cerrar chat" : "Abrir chat con Cata"}
+        aria-label={open ? "Cerrar chat" : "Abrir chat"}
         className="pointer-events-auto size-14 rounded-full shadow-lg"
       >
         {open ? <X className="size-5" /> : <MessageCircle className="size-5" />}

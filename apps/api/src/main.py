@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from config import get_settings
 from routers import health, knowledge_chunks, messages
 
-app = FastAPI(title="Cata — agente de ejemplo (Visit Catamarca)", version="0.1.0")
+app = FastAPI(title="Agent template — FastAPI + LangGraph", version="0.1.0")
 
 # Orígenes explícitos por env var (CORS_ALLOWED_ORIGINS), nunca "*" — el
 # widget embebible expone /messages a cualquier página que lo cargue, así

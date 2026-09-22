@@ -95,7 +95,7 @@ export function Chat({ className }: ChatProps) {
             <MessageContent>
               <MessageBubble variant="soft">
                 <MessageBubbleContent>
-                  <MessageTyping label="Cata está pensando" />
+                  <MessageTyping label="Pensando..." />
                 </MessageBubbleContent>
               </MessageBubble>
             </MessageContent>

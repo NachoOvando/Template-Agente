@@ -7,7 +7,7 @@ import asyncio
 from collections import defaultdict
 
 from graph.build_graph import build_graph
-from graph.state import AgentState, VisitorProfile
+from graph.state import AgentState, UserProfile
 from db.session import SessionLocal
 from llm.provider import LLMProvider
 
@@ -16,7 +16,7 @@ def _new_state(session_id: str, message: str) -> AgentState:
     return AgentState(
         session_id=session_id,
         user_message=message,
-        visitor_profile=VisitorProfile(),
+        user_profile=UserProfile(),
         missing_slot=None,
         retrieved_chunks=[],
         response="",
@@ -32,7 +32,7 @@ class ConversationService:
         # Lock por sesión: entre leer self._sessions[session_id] y escribirlo hay
         # varios `await` reales (extracción, embeddings, generación). Sin esto,
         # dos mensajes a la misma sesión casi simultáneos (doble clic, retry del
-        # cliente) pueden pisarse el estado entero, no solo el visitor_profile —
+        # cliente) pueden pisarse el estado entero, no solo el user_profile —
         # ver BITACORA.md. Distintas sesiones no se bloquean entre sí.
         self._locks: dict[str, asyncio.Lock] = defaultdict(asyncio.Lock)
 

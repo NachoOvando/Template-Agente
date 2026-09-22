@@ -27,4 +27,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/nachoovando/test-2/cata-backend:latest
+          tags: ghcr.io/nachoovando/test-2/backend:latest

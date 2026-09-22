@@ -17,7 +17,7 @@ def _fake_db_session_factory():
 def test_messages_devuelve_429_despues_del_limite(monkeypatch):
     monkeypatch.setattr("graph.nodes.search_similar_chunks", lambda db, embedding: [])
     llm = FakeLLMProvider(
-        extract_results=[ExtractedSlots(interes="trekking", tipo_grupo="familia")]
+        extract_results=[ExtractedSlots(slot_a="trekking", slot_b="familia")]
     )
     service = ConversationService(llm, db_session_factory=_fake_db_session_factory)
     app.dependency_overrides[get_conversation_service] = lambda: service

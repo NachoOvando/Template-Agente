@@ -29,7 +29,7 @@ export default defineConfig({
     cssCodeSplit: false,
     lib: {
       entry: path.resolve(import.meta.dirname, "src/widget-entry.tsx"),
-      name: "CataWidget",
+      name: "AgentWidget",
       formats: ["iife"],
       fileName: () => "widget.js",
     },

@@ -1,4 +1,4 @@
-# CLAUDE.md — Cata (agente de ejemplo, Visit Catamarca)
+# CLAUDE.md — Template de agente conversacional (FastAPI + LangGraph)
 
 Este archivo es específico de este repo. No repite lo que ya cubren los skills globales
 (`project-structure`, `api-conventions`, `db-conventions`, `testing-patterns`) — para
@@ -6,17 +6,52 @@ estructura de carpetas, convenciones de API y de esquema, esos skills mandan.
 
 ## Qué es esto y qué no es
 
-Cata es un agente conversacional de turismo para Visit Catamarca. Este repo es el
-**kickoff de ejemplo**: una versión reducida pero arquitectónicamente correcta, para
-validar el enfoque antes de escalarlo al proyecto real.
+Este repo es un **template genérico** de agente conversacional con RAG: FastAPI +
+LangGraph + Gemini + pgvector, sin persona ni dominio propios. Se forkea y se le
+define una persona/dominio distinto en cada uso (turismo, asistente general,
+atención al cliente, etc.) — ver "Cómo forkear este template" más abajo.
 
-- **Es**: template reusable, base para futuros agentes del mismo tipo.
-- **No es**: el sistema completo de Catamarca, ni un descartable de prueba de concepto
-  que se tira después de este kickoff.
-- Fuera de alcance en esta fase: ingesta vía n8n, piloto de Jev, Observatorio. Son
-  pasos posteriores de la hoja de ruta ya definida.
+- **Es**: base arquitectónicamente correcta, lista para forkear.
+- **No es**: un agente terminado para ningún dominio específico. Los prompts,
+  slots y contenido RAG de este HEAD son placeholders de ejemplo.
+- Nació como el kickoff de "Cata", un agente de turismo real para Visit
+  Catamarca, ya desplegado en producción en esa instancia original. Ese
+  historial completo (decisiones, prompts reales, deploy) vive en `git log`
+  antes de la genericización — nada se perdió, este HEAD simplemente dejó de
+  describir ese producto específico para poder reusarse como base.
 - El widget embebible (`apps/web/dist-widget/widget.js`) se adelantó a pedido
-  explícito del usuario — ver sección "Widget embebible" más abajo.
+  explícito del usuario original — ver sección "Widget embebible" más abajo.
+
+## Cómo forkear este template
+
+Al forkear, tocar en este orden:
+
+1. **Persona y tono** (`apps/api/src/graph/nodes.py`, `_GENERATE_SYSTEM_PROMPT`):
+   reemplazar `[TU PROYECTO]` y `[TU DOMINIO]` por la identidad y el dominio
+   reales. El guardrail anti-alucinación (regla no negociable #2) y el resto
+   de la estructura del prompt no se tocan. El voseo/español rioplatense es
+   convención de este template, no un requisito — cambiarlo si el proyecto
+   necesita otro tono.
+2. **Schema de slots** (`apps/api/src/graph/state.py` + `_CLARIFYING_QUESTIONS`
+   en `nodes.py`): renombrar `slot_a/slot_b/slot_c/slot_d` a los campos reales
+   del dominio, ajustar `REQUIRED_SLOTS` y escribir las preguntas de
+   clarificación. **No hace falta tocar** `extract_profile_node` ni
+   `_build_retrieval_query` — ambos iteran `model_fields` genéricamente, así
+   que ya funcionan con cualquier schema de `UserProfile`/`ExtractedSlots`.
+3. **Contenido RAG** (`apps/api/src/seed/seed_knowledge_chunks.py`): reemplazar
+   los chunks placeholder por contenido real del dominio, y `_SOURCE` por un
+   identificador propio.
+4. **Branding del frontend**: `apps/web/src/App.tsx`, `ChatWidget.tsx`,
+   `Chat.tsx` (label de "pensando"), `widget-entry.tsx` (identificadores
+   cosméticos), `vite.widget.config.ts` (`name` del IIFE), `index.html`
+   (`<title>`), `README.md`.
+5. **Naming de infra**: `"app"` como user/pass/db de Postgres y nombre de
+   volumen en `apps/api/src/config.py`, `.env.example` y `docker-compose.yml`
+   (los 3 juntos); el tag de imagen en
+   `.github/workflows/build-backend-image.yml`.
+6. **Memoria del proyecto**: resetear `PROGRESS.md` y empezar `BITACORA.md`
+   fresco (o seguir agregando entradas ahí si las lecciones de ingeniería de
+   este template siguen aplicando al fork).
 
 ## Stack y por qué
 
@@ -24,21 +59,25 @@ validar el enfoque antes de escalarlo al proyecto real.
   condicionales), no un agente de tool-calling libre — cada paso de la conversación
   tiene que poder auditarse leyendo el grafo, no inferirse de logs.
 - **Modelo**: Google Gemini (`gemini-3.5-flash-lite`) vía `langchain-google-genai`,
-  para generación y extracción estructurada.
+  para generación y extracción estructurada — default de ejemplo, reemplazable
+  sin tocar los nodos del grafo porque vive detrás de `LLMProvider` (regla
+  no negociable #1).
 - **DB**: PostgreSQL + pgvector, SQLAlchemy, Alembic. Migraciones solo por
   autogenerate — nunca SQL a mano.
 - **Entorno local**: Docker Compose, imagen `pgvector/pgvector:pg16`.
-- **Producción**: backend desplegado en [InsForge](https://insforge.dev)
-  (Compute para el contenedor, su Postgres gestionado como DB) — decisión
-  explícita del usuario. InsForge se usa **solo como hosting**: seguimos con
-  SQLAlchemy/Alembic tal cual, nunca su SDK/PostgREST propio. Detalle de
-  URLs, redeploy y migraciones en `PROGRESS.md` (sección "Producción").
+- **Producción**: [InsForge](https://insforge.dev) fue el hosting elegido
+  para la instancia original de Cata (Compute para el contenedor, su
+  Postgres gestionado como DB, usado **solo como hosting** — nunca su
+  SDK/PostgREST propio). Ese deploy ya no está vigente en este fork; el
+  detalle de URLs, redeploy y migraciones de esa instancia queda en el
+  `git log` previo a la genericización, como referencia de cómo desplegar
+  con este stack si se elige el mismo camino.
 - **Frontend de prueba**: React + Vite + Tailwind CSS 4, componentes de
   [beUI](https://beui.dev) (`message`, `input`, `button-stateful`,
-  `animated-toast-stack`) instalados vía shadcn — decisión explícita del
-  usuario para definir el UI/UX del chat. Sigue siendo un arnés de prueba
-  end-to-end, no un producto: sin sidebar, sin navegación, sin persistencia
-  de conversación más allá de la sesión del navegador. Ver `apps/web/README.md`.
+  `animated-toast-stack`) instalados vía shadcn — default de ejemplo para
+  definir el UI/UX del chat. Sigue siendo un arnés de prueba end-to-end, no
+  un producto: sin sidebar, sin navegación, sin persistencia de conversación
+  más allá de la sesión del navegador. Ver `apps/web/README.md`.
 
 ## Widget embebible
 
@@ -122,13 +161,14 @@ START → extract_profile → (condicional) → ask_clarifying → END
 
 | Nodo | Responsabilidad | Llama a IA |
 |---|---|---|
-| `extract_profile` | Extrae slots (`interes`, `tipo_grupo`, `duracion_viaje`, `epoca_del_anio`) del mensaje vía `LLMProvider.extract_structured()`. Primera mención gana — no pisa un slot ya lleno. Calcula `missing_slot`. | Sí (extracción estructurada, no generación libre) |
+| `extract_profile` | Extrae slots (`slot_a`, `slot_b`, `slot_c`, `slot_d` — placeholders, redefinir para tu dominio) del mensaje vía `LLMProvider.extract_structured()`. Primera mención gana — no pisa un slot ya lleno. Calcula `missing_slot`. | Sí (extracción estructurada, no generación libre) |
 | `route_after_extraction` (edge condicional) | Lee `missing_slot` y decide la rama. Código plano. | No |
 | `ask_clarifying` | Pregunta por el slot obligatorio faltante, con templates fijos por slot. | No |
 | `retrieve_context` | Embedding del mensaje + búsqueda por similitud en `knowledge_chunks` (pgvector). Lista vacía es un resultado válido, no un error. | Solo embeddings, no generación |
 | `generate_response` | Única fuente de texto libre para el usuario cuando hay contexto recuperado. Guardrail anti-alucinación (regla no negociable #2) explícito en el prompt: si no hay contexto relevante, lo dice, nunca completa con conocimiento general. | Sí (generación) |
 
-`extract_profile` es la función aislada que en el futuro migra a Jev — no tiene
+`extract_profile` está aislada a propósito para poder migrarse o reemplazarse
+sola en el futuro (ej. por un servicio de extracción externo) — no tiene
 lógica de generación mezclada, solo extracción + merge de slots (código plano).
 
 ## Subagentes
