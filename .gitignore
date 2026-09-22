@@ -10,3 +10,8 @@ venv/
 # API key de InsForge en texto plano (la escribió npx @insforge/install)
 .mcp.json
 .claude/settings.local.json
+
+# Caché local de InsForge (el instalador también agregaba ".claude" a secas
+# acá, lo que hubiera bloqueado cualquier archivo nuevo en .claude/agents/
+# — ya tenemos 3 subagentes trackeados ahí, ver Fase 0 en BITACORA.md/CLAUDE.md)
+.insforge

@@ -1,0 +1,14 @@
+.git
+.venv
+venv
+__pycache__
+*.pyc
+.pytest_cache
+*.egg-info
+.insforge
+.mcp.json
+.env
+apps/web/node_modules
+apps/web/dist
+apps/web/dist-widget
+apps/web/.env
