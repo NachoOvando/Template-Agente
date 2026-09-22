@@ -14,11 +14,6 @@ atención al cliente, etc.) — ver "Cómo forkear este template" más abajo.
 - **Es**: base arquitectónicamente correcta, lista para forkear.
 - **No es**: un agente terminado para ningún dominio específico. Los prompts,
   slots y contenido RAG de este HEAD son placeholders de ejemplo.
-- Nació como el kickoff de "Cata", un agente de turismo real para Visit
-  Catamarca, ya desplegado en producción en esa instancia original. Ese
-  historial completo (decisiones, prompts reales, deploy) vive en `git log`
-  antes de la genericización — nada se perdió, este HEAD simplemente dejó de
-  describir ese producto específico para poder reusarse como base.
 - El widget embebible (`apps/web/dist-widget/widget.js`) se adelantó a pedido
   explícito del usuario original — ver sección "Widget embebible" más abajo.
 
@@ -65,13 +60,11 @@ Al forkear, tocar en este orden:
 - **DB**: PostgreSQL + pgvector, SQLAlchemy, Alembic. Migraciones solo por
   autogenerate — nunca SQL a mano.
 - **Entorno local**: Docker Compose, imagen `pgvector/pgvector:pg16`.
-- **Producción**: [InsForge](https://insforge.dev) fue el hosting elegido
-  para la instancia original de Cata (Compute para el contenedor, su
-  Postgres gestionado como DB, usado **solo como hosting** — nunca su
-  SDK/PostgREST propio). Ese deploy ya no está vigente en este fork; el
-  detalle de URLs, redeploy y migraciones de esa instancia queda en el
-  `git log` previo a la genericización, como referencia de cómo desplegar
-  con este stack si se elige el mismo camino.
+- **Producción**: [InsForge](https://insforge.dev) es el hosting de ejemplo
+  para este stack (Compute para el contenedor, su Postgres gestionado como
+  DB, usado **solo como hosting** — nunca su SDK/PostgREST propio). Sin
+  deploy vigente en esta instancia del template — ver "Producción" en
+  `PROGRESS.md`.
 - **Frontend de prueba**: React + Vite + Tailwind CSS 4, componentes de
   [beUI](https://beui.dev) (`message`, `input`, `button-stateful`,
   `animated-toast-stack`) instalados vía shadcn — default de ejemplo para

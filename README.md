@@ -9,12 +9,6 @@ cliente, etc.).
 - **No es**: un agente terminado para ningún dominio específico. Los prompts,
   slots y contenido RAG de este HEAD son placeholders de ejemplo.
 
-Este repo nació como el kickoff de "Cata", un agente de turismo real para
-Visit Catamarca, ya desplegado en producción en esa instancia original. Ese
-historial completo (decisiones, prompts reales, deploy) vive en el `git log`
-previo a la genericización — nada se perdió, este HEAD simplemente dejó de
-describir ese producto específico para poder reusarse como base.
-
 > Convenciones de diseño, reglas no negociables y memoria de ingeniería
 > (bugs encontrados, causa raíz, regla extraída) viven en
 > [`CLAUDE.md`](./CLAUDE.md) y [`BITACORA.md`](./BITACORA.md). Este README es
