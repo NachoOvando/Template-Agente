@@ -26,8 +26,12 @@ validar el enfoque antes de escalarlo al proyecto real.
 - **DB**: PostgreSQL + pgvector, SQLAlchemy, Alembic. Migraciones solo por
   autogenerate — nunca SQL a mano.
 - **Entorno local**: Docker Compose, imagen `pgvector/pgvector:pg16`.
-- **Frontend de prueba**: HTML/JS estático sin framework. Es un arnés de prueba end-to-end,
-  no un producto.
+- **Frontend de prueba**: React + Vite + Tailwind CSS 4, componentes de
+  [beUI](https://beui.dev) (`message`, `input`, `button-stateful`,
+  `animated-toast-stack`) instalados vía shadcn — decisión explícita del
+  usuario para definir el UI/UX del chat. Sigue siendo un arnés de prueba
+  end-to-end, no un producto: sin sidebar, sin navegación, sin persistencia
+  de conversación más allá de la sesión del navegador. Ver `apps/web/README.md`.
 
 ## Reglas no negociables
 

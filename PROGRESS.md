@@ -1,9 +1,9 @@
 # Progreso — Cata (agente de ejemplo)
 
 ## Estado actual
-Fase 1 (MVP) + Fase 2 (página de prueba) implementadas, auditadas y validadas
-end-to-end con Gemini real. Ponytail y los 3 subagentes ya cargan nativos
-(sesión reiniciada). Próximo paso: arrancar Fase 3 del roadmap cuando se defina.
+Fase 1 (MVP) + Fase 2 (página de prueba, migrada a React + beUI) implementadas,
+auditadas y validadas end-to-end con Gemini real. Ponytail y los 3 subagentes
+ya cargan nativos. Próximo paso: arrancar Fase 3 del roadmap cuando se defina.
 
 ## Historial
 
@@ -47,6 +47,19 @@ end-to-end con Gemini real. Ponytail y los 3 subagentes ya cargan nativos
     el prompt de generación no especificaba variante de español (Gemini
     respondió con un chilenismo — fix: español rioplatense explícito en
     el prompt).
+  - Fase 2 migrada a React + Vite + Tailwind CSS 4, con componentes de
+    beUI (https://beui.dev) instalados vía shadcn — decisión explícita del
+    usuario, reemplaza el HTML/JS estático original. `apps/web/` ahora es
+    un proyecto con build step (`npm install && npm run dev`). Componentes
+    usados: `message` (filas/burbujas/scroller de conversación), `input`,
+    `button-stateful` (estado idle→loading→success/error en el envío),
+    `animated-toast-stack` (errores de conexión). CLAUDE.md actualizado
+    para reflejar el cambio de stack del frontend. Encontrado y corregido
+    un bug real: la burbuja de beUI no parseaba markdown, Gemini generaba
+    `**negrita**` que se veía como texto plano con asteriscos — agregado
+    `react-markdown` (ver BITACORA.md). Probado end-to-end con Playwright
+    headless (typecheck limpio, build de producción limpio, sin errores de
+    consola, conversación completa funcionando con Gemini real).
 - Falta:
   - Nitpicks de backend-senior no resueltos a propósito (no ameritan acción en
     este MVP): `requirements.txt` sin pins exactos, sin exception handler

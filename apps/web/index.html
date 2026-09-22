@@ -1,29 +1,13 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8" />
-<title>Cata — arnés de prueba</title>
-<style>
-  body { font-family: system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem; }
-  h1 { font-size: 1.1rem; color: #555; }
-  #history { border: 1px solid #ccc; border-radius: 8px; padding: 1rem; min-height: 300px; margin-bottom: 1rem; }
-  .msg { margin: 0.5rem 0; }
-  .msg.user { text-align: right; }
-  .msg .bubble { display: inline-block; padding: 0.5rem 0.8rem; border-radius: 8px; max-width: 80%; }
-  .msg.user .bubble { background: #d6e4ff; }
-  .msg.assistant .bubble { background: #eee; }
-  form { display: flex; gap: 0.5rem; }
-  input[type="text"] { flex: 1; padding: 0.5rem; }
-  button { padding: 0.5rem 1rem; }
-</style>
-</head>
-<body>
-  <h1>Cata — arnés de prueba (no es el producto final)</h1>
-  <div id="history"></div>
-  <form id="form">
-    <input id="input" type="text" placeholder="Escribí tu mensaje..." autocomplete="off" required />
-    <button type="submit">Enviar</button>
-  </form>
-  <script src="app.js"></script>
-</body>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cata — arnés de prueba</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
