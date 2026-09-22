@@ -15,13 +15,17 @@ class GeminiProvider(LLMProvider):
         self._embeddings = GoogleGenerativeAIEmbeddings(
             model=settings.gemini_embedding_model,
             google_api_key=settings.google_api_key,
+            output_dimensionality=settings.embedding_dimensions,
         )
 
     async def generate(self, system_prompt: str, user_prompt: str) -> str:
         response = await self._chat.ainvoke(
             [("system", system_prompt), ("human", user_prompt)]
         )
-        return response.content
+        # .content puede ser un string o una lista de content blocks estructurados
+        # (algunos modelos Gemini devuelven bloques con thought signatures) —
+        # .text normaliza ambos casos a str. Ver BITACORA.md.
+        return response.text
 
     async def extract_structured(
         self, system_prompt: str, user_prompt: str, schema: type[T]

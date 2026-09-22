@@ -1,8 +1,9 @@
 # Progreso — Cata (agente de ejemplo)
 
 ## Estado actual
-Fase 1 (MVP) + Fase 2 (página de prueba) implementadas y auditadas. Pendiente:
-probar con una GOOGLE_API_KEY real.
+Fase 1 (MVP) + Fase 2 (página de prueba) implementadas, auditadas y validadas
+end-to-end con Gemini real. Ponytail y los 3 subagentes ya cargan nativos
+(sesión reiniciada). Próximo paso: arrancar Fase 3 del roadmap cuando se defina.
 
 ## Historial
 
@@ -32,15 +33,24 @@ probar con una GOOGLE_API_KEY real.
   - 12 tests pytest pasando (guardrail anti-alucinación, dato faltante,
     base vacía, consistencia de `VisitorProfile` por sesión incluyendo
     concurrencia, endpoints).
+  - Sesión reiniciada: Ponytail y los 3 subagentes (`.claude/agents/`) ya
+    cargan nativos.
+  - Conseguida una `GOOGLE_API_KEY` real. Seed corrido contra Gemini real
+    (13 chunks). `/messages` probado end-to-end (curl) con 3 escenarios:
+    slot faltante → pregunta; slot completo → respuesta grounded en los
+    chunks reales; pregunta fuera de base → "no tengo esa información".
+    Encontrados y corregidos 3 problemas que `FakeLLMProvider` no podía
+    detectar (ver BITACORA.md, "Primera corrida contra Gemini real"):
+    `.content` devolvía content blocks en vez de `str` (fix: `.text`),
+    `models/text-embedding-004` no existe para esta key (fix:
+    `models/gemini-embedding-001` + `output_dimensionality` explícito), y
+    el prompt de generación no especificaba variante de español (Gemini
+    respondió con un chilenismo — fix: español rioplatense explícito en
+    el prompt).
 - Falta:
-  - Correr el seed real y probar `/messages` end-to-end con una `GOOGLE_API_KEY`
-    real (no disponible en este entorno).
-  - Reiniciar la sesión de Claude Code para que Ponytail y los 3 subagentes
-    (`.claude/agents/`) queden disponibles nativamente — se instalaron/crearon
-    a mitad de sesión, por eso esta auditoría se corrió con agentes generales.
   - Nitpicks de backend-senior no resueltos a propósito (no ameritan acción en
     este MVP): `requirements.txt` sin pins exactos, sin exception handler
     global con logging del lado servidor, sin índice en `knowledge_chunks.source`.
-- Bloqueadores:
-  - Sin `GOOGLE_API_KEY` real en este entorno — no se pudo validar el
-    comportamiento real del agente contra Gemini, solo con `FakeLLMProvider`.
+  - Definir alcance de la Fase 3 (fuera de este kickoff: ingesta vía n8n,
+    piloto de Jev, Observatorio, widget embebible).
+- Bloqueadores: ninguno.
