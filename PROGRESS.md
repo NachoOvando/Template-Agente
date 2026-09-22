@@ -2,13 +2,17 @@
 
 ## Estado actual
 Fase 1 (MVP) + Fase 2 (página de prueba React + beUI) + widget embebible
-implementadas, auditadas y validadas end-to-end con Gemini real. Backend
-desplegado en producción (InsForge). Ponytail y los 3 subagentes ya cargan
-nativos. Próximo paso: decidir si se despliega también el frontend/widget, o
-arrancar el resto de la Fase 3 del roadmap (n8n, Jev, Observatorio).
+implementadas, auditadas y validadas end-to-end con Gemini real. Backend y
+frontend desplegados en producción (InsForge). Ponytail y los 3 subagentes
+ya cargan nativos. Próximo paso: definir el resto de la Fase 3 del roadmap
+(n8n, Jev, Observatorio), o desplegar también `widget.js` si hace falta
+probarlo en un sitio de terceros real.
 
 ## Producción
 
+- **Frontend (página de prueba)**: `https://4z5mgi9g.insforge.site`
+  (InsForge deployments/Vercel, desde `apps/web/`). CORS del backend incluye
+  este origen. Redeploy: `npx -y @insforge/cli deployments deploy apps/web`.
 - **Backend**: `https://cata-backend-29019267-1a16-4561-8f6e-5ec1e3aced03.fly.dev`
   (InsForge Compute, imagen `ghcr.io/nachoovando/test-2/cata-backend:latest`).
 - **DB**: Postgres gestionado de InsForge (con pgvector), mismo proyecto
