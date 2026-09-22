@@ -2,9 +2,31 @@
 
 ## Estado actual
 Fase 1 (MVP) + Fase 2 (página de prueba React + beUI) + widget embebible
-implementadas, auditadas y validadas end-to-end con Gemini real. Ponytail y
-los 3 subagentes ya cargan nativos. Próximo paso: arrancar el resto de la
-Fase 3 del roadmap cuando se defina (n8n, Jev, Observatorio).
+implementadas, auditadas y validadas end-to-end con Gemini real. Backend
+desplegado en producción (InsForge). Ponytail y los 3 subagentes ya cargan
+nativos. Próximo paso: decidir si se despliega también el frontend/widget, o
+arrancar el resto de la Fase 3 del roadmap (n8n, Jev, Observatorio).
+
+## Producción
+
+- **Backend**: `https://cata-backend-29019267-1a16-4561-8f6e-5ec1e3aced03.fly.dev`
+  (InsForge Compute, imagen `ghcr.io/nachoovando/test-2/cata-backend:latest`).
+- **DB**: Postgres gestionado de InsForge (con pgvector), mismo proyecto
+  ("Agente-Turismo"). SQLAlchemy + Alembic sin cambios — InsForge se usa solo
+  como infraestructura de hosting, nunca su SDK/PostgREST.
+- **Redeploy tras un cambio en `apps/api/`**: push a `main` con cambios bajo
+  `apps/api/**` dispara `.github/workflows/build-backend-image.yml` (build +
+  push a GHCR). Después, actualizar el servicio:
+  `npx -y @insforge/cli compute update <id> --image ghcr.io/nachoovando/test-2/cata-backend:latest`
+  (`compute list --json` para el `<id>`).
+- **Migraciones nuevas**: generar con `alembic revision --autogenerate` como
+  siempre, después `DATABASE_URL=<connection-string-de-insforge> alembic
+  upgrade head --sql` (modo offline, esta sandbox no puede abrir una conexión
+  TCP directa a Postgres) y aplicar el SQL resultante con
+  `npx -y @insforge/cli db query "<sql>"` — ver BITACORA.md.
+- **Secrets del compute service**: `GOOGLE_API_KEY`, `DATABASE_URL`,
+  `INTERNAL_API_KEY`, `CORS_ALLOWED_ORIGINS` — rotar con
+  `compute update <id> --env-set KEY=VALUE` (nunca `--env`, que reemplaza todo).
 
 ## Historial
 
@@ -80,6 +102,23 @@ Fase 3 del roadmap cuando se defina (n8n, Jev, Observatorio).
     simulada con CSS deliberadamente hostil (`* { border-radius: 0
     !important }`, etc.) — ni el widget rompió el sitio host, ni el sitio
     host rompió el widget.
+  - Backend desplegado en InsForge (Compute + Postgres gestionado con
+    pgvector) a pedido explícito del usuario. Decisión: InsForge solo para
+    hosting — se mantiene SQLAlchemy/Alembic tal cual, nunca su SDK/PostgREST
+    (ver CLAUDE.md). Dos limitaciones de red del sandbox aparecieron y se
+    resolvieron sin bordear la política (reportadas a InsForge vía
+    `feedback`): sin TCP crudo a Postgres (migraciones vía `alembic upgrade
+    head --sql` + `insforge db query`) y sin gRPC al builder remoto de Fly
+    (`compute deploy` en modo source no funciona acá — se usa modo imagen,
+    con un workflow de GitHub Actions que buildea y pushea a GHCR). Seed
+    corrido contra producción real vía `POST /knowledge-chunks`. Encontrado
+    y corregido un bug real de diseño probando una conversación real
+    multi-turno: `retrieve_context_node` embebía solo el último mensaje del
+    usuario, perdiendo el interés dicho en un turno anterior cuando el turno
+    actual solo contesta el slot que faltaba (ver BITACORA.md,
+    "retrieve_context perdía el tema real") — corregido combinando el
+    `visitor_profile` acumulado con el mensaje actual, con test de
+    regresión. Validado de nuevo en producción tras el fix.
 - Falta:
   - Nitpicks de backend-senior no resueltos a propósito (no ameritan acción en
     este MVP): `requirements.txt` sin pins exactos, sin exception handler

@@ -28,6 +28,11 @@ validar el enfoque antes de escalarlo al proyecto real.
 - **DB**: PostgreSQL + pgvector, SQLAlchemy, Alembic. Migraciones solo por
   autogenerate — nunca SQL a mano.
 - **Entorno local**: Docker Compose, imagen `pgvector/pgvector:pg16`.
+- **Producción**: backend desplegado en [InsForge](https://insforge.dev)
+  (Compute para el contenedor, su Postgres gestionado como DB) — decisión
+  explícita del usuario. InsForge se usa **solo como hosting**: seguimos con
+  SQLAlchemy/Alembic tal cual, nunca su SDK/PostgREST propio. Detalle de
+  URLs, redeploy y migraciones en `PROGRESS.md` (sección "Producción").
 - **Frontend de prueba**: React + Vite + Tailwind CSS 4, componentes de
   [beUI](https://beui.dev) (`message`, `input`, `button-stateful`,
   `animated-toast-stack`) instalados vía shadcn — decisión explícita del
