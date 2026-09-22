@@ -11,10 +11,20 @@ probarlo en un sitio de terceros real.
 ## Producción
 
 - **Frontend (página de prueba)**: `https://4z5mgi9g.insforge.site`
-  (InsForge deployments/Vercel, desde `apps/web/`). CORS del backend incluye
-  este origen. Redeploy: `npx -y @insforge/cli deployments deploy apps/web`.
+  (InsForge deployments/Vercel, desde `apps/web/`). `npm run build` ahí
+  también compila el widget y lo deja en `dist/widget.js` — mismo dominio,
+  sin paso de deploy aparte. Redeploy:
+  `npx -y @insforge/cli deployments deploy apps/web`.
+- **Widget embebible en producción**: `https://4z5mgi9g.insforge.site/widget.js`.
+  Uso: `<script src="https://4z5mgi9g.insforge.site/widget.js" data-api-base="https://cata-backend-29019267-1a16-4561-8f6e-5ec1e3aced03.fly.dev"></script>`.
 - **Backend**: `https://cata-backend-29019267-1a16-4561-8f6e-5ec1e3aced03.fly.dev`
   (InsForge Compute, imagen `ghcr.io/nachoovando/test-2/cata-backend:latest`).
+- **CORS_ALLOWED_ORIGINS actual**: `https://4z5mgi9g.insforge.site`,
+  `https://ignacio-ovando.vercel.app` (widget probado ahí),
+  `http://localhost:5173`. Agregar un origen nuevo:
+  `npx -y @insforge/cli compute update <id> --env-set CORS_ALLOWED_ORIGINS=<lista-completa-separada-por-coma>`
+  (reemplaza el valor entero, no es aditivo — incluir siempre todos los
+  orígenes vigentes).
 - **DB**: Postgres gestionado de InsForge (con pgvector), mismo proyecto
   ("Agente-Turismo"). SQLAlchemy + Alembic sin cambios — InsForge se usa solo
   como infraestructura de hosting, nunca su SDK/PostgREST.
