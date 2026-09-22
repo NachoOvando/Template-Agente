@@ -6,3 +6,7 @@ venv/
 .pytest_cache/
 *.egg-info/
 .DS_Store
+
+# API key de InsForge en texto plano (la escribió npx @insforge/install)
+.mcp.json
+.claude/settings.local.json
