@@ -133,6 +133,29 @@ async def test_mensajes_concurrentes_misma_sesion_no_se_pisan(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_retrieval_usa_interes_de_turno_anterior(monkeypatch):
+    """Regresión: retrieve_context_node embebía solo el mensaje del turno
+    actual. Si el usuario dice el interés en el turno 1 ("termas") y en el
+    turno 2 solo contesta el slot que faltaba ("voy en pareja"), la búsqueda
+    tiene que seguir apuntando a "termas", no perder el tema — ver BITACORA.md."""
+    monkeypatch.setattr("graph.nodes.search_similar_chunks", lambda db, embedding: [])
+    llm = FakeLLMProvider(
+        extract_results=[
+            ExtractedSlots(interes="termas", tipo_grupo=None),
+            ExtractedSlots(interes=None, tipo_grupo="pareja"),
+        ]
+    )
+    service = ConversationService(llm, db_session_factory=fake_db_session_factory)
+
+    await service.handle_message("session-1", "quiero ir a termas")
+    await service.handle_message("session-1", "voy en pareja")
+
+    assert len(llm.embed_calls) == 1  # el primer turno no llega a retrieve_context
+    [query_texts] = llm.embed_calls
+    assert "termas" in query_texts[0]
+
+
+@pytest.mark.asyncio
 async def test_dos_sesiones_no_comparten_perfil(monkeypatch):
     monkeypatch.setattr("graph.nodes.search_similar_chunks", lambda db, embedding: [])
     llm = FakeLLMProvider(

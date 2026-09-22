@@ -10,6 +10,7 @@ class FakeLLMProvider(LLMProvider):
         self._embedding_dim = embedding_dim
         self.generate_calls: list[tuple[str, str]] = []
         self.extract_calls: list[str] = []
+        self.embed_calls: list[list[str]] = []
 
     async def generate(self, system_prompt: str, user_prompt: str) -> str:
         self.generate_calls.append((system_prompt, user_prompt))
@@ -22,4 +23,5 @@ class FakeLLMProvider(LLMProvider):
         return schema()
 
     async def embed(self, texts: list[str]) -> list[list[float]]:
+        self.embed_calls.append(list(texts))
         return [[0.0] * self._embedding_dim for _ in texts]

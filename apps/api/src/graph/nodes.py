@@ -70,12 +70,26 @@ def ask_clarifying_node(state: AgentState) -> dict:
     return {"response": question}
 
 
+def _build_retrieval_query(state: AgentState) -> str:
+    """El mensaje del turno actual puede no mencionar el interés (ej. el
+    usuario solo contesta "voy en pareja" a la pregunta del slot faltante) —
+    el interés real puede venir de un turno anterior. Sin esto, la búsqueda
+    embebe solo el último mensaje y pierde el tema real de la consulta."""
+    profile = state["visitor_profile"]
+    known = [
+        value
+        for value in (profile.interes, profile.tipo_grupo, profile.duracion_viaje, profile.epoca_del_anio)
+        if value
+    ]
+    return ". ".join([*known, state["user_message"]])
+
+
 def make_retrieve_context_node(
     llm_provider: LLMProvider,
     db_session_factory: Callable[[], AbstractContextManager],
 ):
     async def retrieve_context_node(state: AgentState) -> dict:
-        [query_embedding] = await llm_provider.embed([state["user_message"]])
+        [query_embedding] = await llm_provider.embed([_build_retrieval_query(state)])
 
         def _search() -> list[str]:
             # Session de SQLAlchemy es sync — correrla inline acá bloquearía el
