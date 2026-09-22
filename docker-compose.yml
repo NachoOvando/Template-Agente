@@ -1,0 +1,35 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: cata
+      POSTGRES_PASSWORD: cata
+      POSTGRES_DB: cata
+    ports:
+      - "5432:5432"
+    volumes:
+      - cata_db_data:/var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cata -d cata"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://cata:cata@db:5432/cata
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./apps/api/src:/app/apps/api/src
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  cata_db_data:

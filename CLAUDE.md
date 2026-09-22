@@ -76,6 +76,24 @@ División de responsabilidad para que no se pisen:
 - **`agent-behavior-reviewer`**: comportamiento del agente conversacional, no volumen
   de código.
 
+## Grafo — nodos
+
+```
+START → extract_profile → (condicional) → ask_clarifying → END
+                                         → retrieve_context → generate_response → END
+```
+
+| Nodo | Responsabilidad | Llama a IA |
+|---|---|---|
+| `extract_profile` | Extrae slots (`interes`, `tipo_grupo`, `duracion_viaje`, `epoca_del_anio`) del mensaje vía `LLMProvider.extract_structured()`. Primera mención gana — no pisa un slot ya lleno. Calcula `missing_slot`. | Sí (extracción estructurada, no generación libre) |
+| `route_after_extraction` (edge condicional) | Lee `missing_slot` y decide la rama. Código plano. | No |
+| `ask_clarifying` | Pregunta por el slot obligatorio faltante, con templates fijos por slot. | No |
+| `retrieve_context` | Embedding del mensaje + búsqueda por similitud en `knowledge_chunks` (pgvector). Lista vacía es un resultado válido, no un error. | Solo embeddings, no generación |
+| `generate_response` | Única fuente de texto libre para el usuario cuando hay contexto recuperado. Guardrail anti-alucinación (regla no negociable #2) explícito en el prompt: si no hay contexto relevante, lo dice, nunca completa con conocimiento general. | Sí (generación) |
+
+`extract_profile` es la función aislada que en el futuro migra a Jev — no tiene
+lógica de generación mezclada, solo extracción + merge de slots (código plano).
+
 ## Subagentes
 
 | Subagente | Cuándo se invoca |
