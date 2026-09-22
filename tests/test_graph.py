@@ -1,6 +1,7 @@
 """Tests del grafo, sin pegarle nunca a Gemini ni a Postgres reales —
 ver `tests/fakes.py`. Casos requeridos por el checklist del subagente `tester`."""
 
+import asyncio
 from contextlib import contextmanager
 
 import pytest
@@ -98,6 +99,37 @@ async def test_consistencia_visitor_profile_no_diverge(monkeypatch):
     final_profile = service._sessions["session-1"]["visitor_profile"]
     assert final_profile.interes == "trekking"  # primera mención gana, no se pisa
     assert final_profile.tipo_grupo == "amigos"  # este sí estaba vacío, se llena
+
+
+@pytest.mark.asyncio
+async def test_mensajes_concurrentes_misma_sesion_no_se_pisan(monkeypatch):
+    """Regresión: sin lock por sesión, dos mensajes casi simultáneos a la misma
+    sesión podían perder el turno anterior entero (no solo el visitor_profile) —
+    ver BITACORA.md. Se fuerza el entrelazado con un pequeño sleep dentro de
+    extract_structured, para que el segundo `get` ocurra antes del primer `set`."""
+    monkeypatch.setattr("graph.nodes.search_similar_chunks", lambda db, embedding: [])
+
+    class SlowFakeLLMProvider(FakeLLMProvider):
+        async def extract_structured(self, system_prompt, user_prompt, schema):
+            await asyncio.sleep(0.01)
+            return await super().extract_structured(system_prompt, user_prompt, schema)
+
+    llm = SlowFakeLLMProvider(
+        extract_results=[
+            ExtractedSlots(interes="trekking", tipo_grupo=None),
+            ExtractedSlots(interes=None, tipo_grupo="familia"),
+        ]
+    )
+    service = ConversationService(llm, db_session_factory=fake_db_session_factory)
+
+    await asyncio.gather(
+        service.handle_message("session-1", "quiero hacer trekking"),
+        service.handle_message("session-1", "voy con mi familia"),
+    )
+
+    final_profile = service._sessions["session-1"]["visitor_profile"]
+    assert final_profile.interes == "trekking"  # no se pierde por la carrera
+    assert final_profile.tipo_grupo == "familia"
 
 
 @pytest.mark.asyncio

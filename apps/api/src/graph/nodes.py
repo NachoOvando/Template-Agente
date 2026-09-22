@@ -5,6 +5,8 @@ construyen con una factory (`make_*_node`) para no depender de estado global."""
 from collections.abc import Callable
 from contextlib import AbstractContextManager
 
+from fastapi.concurrency import run_in_threadpool
+
 from db.queries.knowledge_chunks import search_similar_chunks
 from graph.state import REQUIRED_SLOTS, AgentState, ExtractedSlots
 from llm.provider import LLMProvider
@@ -73,11 +75,17 @@ def make_retrieve_context_node(
 ):
     async def retrieve_context_node(state: AgentState) -> dict:
         [query_embedding] = await llm_provider.embed([state["user_message"]])
-        with db_session_factory() as db:
-            chunks = search_similar_chunks(db, query_embedding)
+
+        def _search() -> list[str]:
+            # Session de SQLAlchemy es sync — correrla inline acá bloquearía el
+            # event loop de FastAPI. run_in_threadpool la saca del loop.
+            with db_session_factory() as db:
+                return [chunk.content for chunk in search_similar_chunks(db, query_embedding)]
+
         # Lista vacía si pgvector no tiene chunks todavía (o ninguno es relevante)
         # es un resultado válido, no un error — generate_response_node lo maneja.
-        return {"retrieved_chunks": [chunk.content for chunk in chunks]}
+        retrieved_chunks = await run_in_threadpool(_search)
+        return {"retrieved_chunks": retrieved_chunks}
 
     return retrieve_context_node
 

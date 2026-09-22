@@ -1,8 +1,8 @@
 # Progreso — Cata (agente de ejemplo)
 
 ## Estado actual
-Fase 1 (MVP) + Fase 2 (página de prueba) implementadas. Pendiente: revisar
-hallazgos de la auditoría de subagentes y probar con una GOOGLE_API_KEY real.
+Fase 1 (MVP) + Fase 2 (página de prueba) implementadas y auditadas. Pendiente:
+probar con una GOOGLE_API_KEY real.
 
 ## Historial
 
@@ -19,18 +19,28 @@ hallazgos de la auditoría de subagentes y probar con una GOOGLE_API_KEY real.
     `POST /messages`, `GET /health`, `POST /knowledge-chunks` (protegido por
     API key interna).
   - Fase 2: página de prueba estática (`apps/web/`, sin build step).
-  - 11 tests pytest pasando (guardrail anti-alucinación, dato faltante,
-    base vacía, consistencia de `VisitorProfile` por sesión, endpoints).
   - `alembic upgrade head` corrido contra Postgres real (Docker Compose).
+  - Auditoría de Fase 1 con los 3 subagentes (corridos como agentes generales,
+    ver bloqueador abajo): `agent-behavior-reviewer` sin hallazgos bloqueantes;
+    `backend-senior` encontró 2 hallazgos de severidad media (índice pgvector —
+    se deja para cuando haya volumen real, no antes; llamadas sync a
+    SQLAlchemy bloqueando el event loop — corregido con `run_in_threadpool`) y
+    nitpicks menores (comparación de API key no constant-time — corregido con
+    `secrets.compare_digest`); `tester` encontró un bug real de concurrencia
+    (ver BITACORA.md, "Race condition: mensajes concurrentes...") — corregido
+    con lock por sesión + test de regresión.
+  - 12 tests pytest pasando (guardrail anti-alucinación, dato faltante,
+    base vacía, consistencia de `VisitorProfile` por sesión incluyendo
+    concurrencia, endpoints).
 - Falta:
   - Correr el seed real y probar `/messages` end-to-end con una `GOOGLE_API_KEY`
     real (no disponible en este entorno).
   - Reiniciar la sesión de Claude Code para que Ponytail y los 3 subagentes
     (`.claude/agents/`) queden disponibles nativamente — se instalaron/crearon
-    a mitad de sesión.
-  - Revisar y resolver los hallazgos de la auditoría de backend-senior, tester
-    y agent-behavior-reviewer (corridos como agentes generales por la
-    limitación de arriba).
+    a mitad de sesión, por eso esta auditoría se corrió con agentes generales.
+  - Nitpicks de backend-senior no resueltos a propósito (no ameritan acción en
+    este MVP): `requirements.txt` sin pins exactos, sin exception handler
+    global con logging del lado servidor, sin índice en `knowledge_chunks.source`.
 - Bloqueadores:
   - Sin `GOOGLE_API_KEY` real en este entorno — no se pudo validar el
     comportamiento real del agente contra Gemini, solo con `FakeLLMProvider`.

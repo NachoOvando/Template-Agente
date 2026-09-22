@@ -1,3 +1,5 @@
+import secrets
+
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -12,7 +14,10 @@ router = APIRouter()
 
 def verify_internal_api_key(x_internal_api_key: str = Header(...)) -> None:
     settings = get_settings()
-    if not settings.internal_api_key or x_internal_api_key != settings.internal_api_key:
+    valid = bool(settings.internal_api_key) and secrets.compare_digest(
+        x_internal_api_key, settings.internal_api_key
+    )
+    if not valid:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="API key inválida")
 
 

@@ -1,3 +1,4 @@
+from fastapi.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
 
 from db.models import KnowledgeChunk
@@ -11,4 +12,6 @@ class KnowledgeService:
 
     async def ingest_chunk(self, db: Session, content: str, source: str) -> KnowledgeChunk:
         [embedding] = await self._llm_provider.embed([content])
-        return insert_chunk(db, content=content, source=source, embedding=embedding)
+        # insert_chunk usa una Session sync — sacarla del event loop (ver la
+        # misma razón documentada en graph/nodes.py:retrieve_context_node).
+        return await run_in_threadpool(insert_chunk, db, content, source, embedding)
